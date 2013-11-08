@@ -1,0 +1,3 @@
+[submodule "vendor/src/github.com/crowdmob/goamz"]
+	path = vendor/src/github.com/crowdmob/goamz
+	url = https://github.com/crowdmob/goamz
