@@ -1,3 +1,6 @@
 [submodule "vendor/src/github.com/crowdmob/goamz"]
 	path = vendor/src/github.com/crowdmob/goamz
 	url = https://github.com/crowdmob/goamz
+[submodule "vendor/src/github.com/jessevdk/go-flags"]
+	path = vendor/src/github.com/jessevdk/go-flags
+	url = https://github.com/jessevdk/go-flags
