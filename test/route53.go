@@ -103,7 +103,7 @@ func (r *RRSetCommand) Execute(args []string) error {
 			RRSet:  rrset,
 		}
 		r53.ChangeRRSet(r.ZoneId, []route53.RRSetChange{change}, r.Comment)
-	case "del-rrset":
+	case "delete-rrset":
 		change := route53.RRSetChange{
 			Action: "DELETE",
 			RRSet:  rrset,
