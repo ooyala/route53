@@ -48,21 +48,24 @@ func (r53 *Route53) run(req request, res interface{}) error {
 	sign(r53.auth, hreq)
 
 	if debug {
-		fmt.Fprintf(os.Stderr, "-- request\n%#v\n", hreq)
+		fmt.Fprintf(os.Stderr, "-- request\n%+v\n\n", hreq)
 	}
 
 	if req.body != nil {
 		data, err := xml.Marshal(req.body)
 		if err != nil {
+			if debug {
+				fmt.Fprintf(os.Stderr, "-- error marshalling\n%s\n%+v\n", err, req.body)
+			}
 			return err
 		}
 
 		if debug {
-			fmt.Fprintf(os.Stderr, "-- body\n%s\n", string(data))
+			ppBody, _ := xml.MarshalIndent(req.body, " ", "    ")
+			fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", xml.Header+string(ppBody))
 		}
 
-		reader := bytes.NewReader(data)
-		hreq.Body = ioutil.NopCloser(reader)
+		hreq.Body = ioutil.NopCloser(bytes.NewBufferString(xml.Header + string(data)))
 	}
 
 	hres, err := http.DefaultClient.Do(hreq)
@@ -72,16 +75,12 @@ func (r53 *Route53) run(req request, res interface{}) error {
 	defer hres.Body.Close()
 
 	if debug {
-		fmt.Fprintf(os.Stderr, "-- response\n%#v\n", hres)
+		fmt.Fprintf(os.Stderr, "-- response\n%+v\n\n", hres)
 	}
 
 	body, err := ioutil.ReadAll(hres.Body)
 	if err != nil {
 		return err
-	}
-
-	if debug {
-		fmt.Fprintf(os.Stderr, "-- body\n%s\n", string(body))
 	}
 
 	bodyReadCloser := ioutil.NopCloser(bytes.NewReader(body))
@@ -91,9 +90,30 @@ func (r53 *Route53) run(req request, res interface{}) error {
 
 		err := xml.NewDecoder(bodyReadCloser).Decode(&eres)
 		if err != nil {
+			if debug {
+				fmt.Fprintf(os.Stderr, "-- error unmarshalling\n%s\n%s\n\n", err, string(body))
+			}
+			return fmt.Errorf("could not parse: %s", string(body))
+		} else {
+			if debug {
+				ppBody, _ := xml.MarshalIndent(eres, " ", "    ")
+				fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", string(ppBody))
+			}
 			return fmt.Errorf("%s: %s", eres.Code, eres.Message)
 		}
 	}
 
-	return xml.NewDecoder(bodyReadCloser).Decode(res)
+	err = xml.NewDecoder(bodyReadCloser).Decode(res)
+
+	if debug {
+		if err != nil {
+			// Decode error, cannot pretty print this response.
+			fmt.Fprintf(os.Stderr, "-- error unmarshalling\n%s\n%s\n\n", err, string(body))
+		} else {
+			ppBody, _ := xml.MarshalIndent(res, " ", "    ")
+			fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", string(ppBody))
+		}
+	}
+
+	return err
 }

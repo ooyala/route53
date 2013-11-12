@@ -10,42 +10,43 @@ import (
 
 type ChangeRRSetRequest struct {
 	XMLName xml.Name      `xml:"ChangeResourceRecordSetsRequest"`
+	XMLNS   string        `xml:"xmlns,attr"`
 	Comment string        `xml:"ChangeBatch>Comment"`
-	Changes []RRSetChange `xml:"ChangeBatch>Changes"`
+	Changes []RRSetChange `xml:"ChangeBatch>Changes>Change"`
 }
 
 type RRSetChange struct {
 	Action string
-	RRSet  RRSet
+	RRSet  RRSet `xml:"ResourceRecordSet"`
 }
 
 type RRSet struct {
-	zone *HostedZone `xml:"-"`
-	// Basic Resource Record
 	Name          string
 	Type          string
 	TTL           uint
 	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
-	HealthCheckId string   `xml:"omitempty"`
+	HealthCheckId string   `xml:",omitempty"`
+
+	// Optional Unique Identifier
+	SetIdentifier string `xml:",omitempty"`
+
 	// Weight Syntax
-	Weight        uint8  `xml:"omitempty"`
-	SetIdentifier string `xml:"omitempty"`
+	Weight uint8 `xml:",omitempty"`
+
 	// Alias Syntax
-	AliasTarget AliasTarget `xml:"omitempty"`
+	// HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
+	// DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
+	// EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
+
 	// Fail Syntax
-	FailOver string `xml:"omitempty"`
+	FailOver string `xml:",omitempty"`
+
 	// Latency Syntax
-	Region string `xml:"omitempty"`
+	Region string `xml:",omitempty"`
 }
 
-type AliasTarget struct {
-	HostedZoneId         string
-	DNSName              string
-	EvaluateTargetHealth bool
-}
-
-type ChangeRRSetResponse struct {
-	XMLName    xml.Name `xml:"ChangeResourceRecordSetResponse"`
+type ChangeRRSetsResponse struct {
+	XMLName    xml.Name `xml:"ChangeResourceRecordSetsResponse"`
 	ChangeInfo ChangeInfo
 }
 
@@ -60,44 +61,41 @@ type ListRRSetResponse struct {
 
 // Route53 API requests.
 
-func (z *HostedZone) ChangeRRSetRequest(changes []RRSetChange, comment string) (ChangeInfo, error) {
+func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment string) (ChangeInfo, error) {
 	xmlReq := &ChangeRRSetRequest{
+		XMLNS:   "https://route53.amazonaws.com/doc/2012-12-12/",
 		Comment: comment,
 		Changes: changes,
 	}
 
 	req := request{
 		method: "POST",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", z.Id),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
 		body:   xmlReq,
 	}
 
-	xmlRes := &ChangeRRSetResponse{}
+	xmlRes := &ChangeRRSetsResponse{}
 
-	if err := z.r53.run(req, xmlRes); err != nil {
+	if err := r53.run(req, xmlRes); err != nil {
 		return ChangeInfo{}, err
 	}
 
 	return xmlRes.ChangeInfo, nil
 }
 
-func (z *HostedZone) ListRRSet() ([]RRSet, error) {
+func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", z.Id),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
 	}
 
 	xmlRes := &ListRRSetResponse{}
 
-	if err := z.r53.run(req, xmlRes); err != nil {
+	if err := r53.run(req, xmlRes); err != nil {
 		return []RRSet{}, err
 	}
 	if xmlRes.IsTruncated {
 		return []RRSet{}, errors.New("cannot handle truncated responses")
-	}
-
-	for _, rrset := range xmlRes.RRSets {
-		rrset.zone = z
 	}
 
 	return xmlRes.RRSets, nil
@@ -105,20 +103,28 @@ func (z *HostedZone) ListRRSet() ([]RRSet, error) {
 
 // Convenience functions on AWS APIs.
 
-func (z HostedZone) CreateRRSet(rrset RRSet, comment string) (ChangeInfo, error) {
+func (z *HostedZone) ChangeRRSet(changes []RRSetChange, comment string) (ChangeInfo, error) {
+	return z.r53.ChangeRRSet(z.Id, changes, comment)
+}
+
+func (z *HostedZone) ListRRSets() ([]RRSet, error) {
+	return z.r53.ListRRSets(z.Id)
+}
+
+func (z *HostedZone) CreateRRSet(rrset RRSet, comment string) (ChangeInfo, error) {
 	change := RRSetChange{
 		Action: "CREATE",
 		RRSet:  rrset,
 	}
 
-	return z.ChangeRRSetRequest([]RRSetChange{change}, comment)
+	return z.ChangeRRSet([]RRSetChange{change}, comment)
 }
 
-func (rrset RRSet) Delete(comment string) (ChangeInfo, error) {
+func (z *HostedZone) DeleteRRSet(rrset RRSet, comment string) (ChangeInfo, error) {
 	change := RRSetChange{
 		Action: "DELETE",
 		RRSet:  rrset,
 	}
 
-	return rrset.zone.ChangeRRSetRequest([]RRSetChange{change}, comment)
+	return z.ChangeRRSet([]RRSetChange{change}, comment)
 }

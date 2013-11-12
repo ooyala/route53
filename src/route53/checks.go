@@ -10,6 +10,7 @@ import (
 
 type CreateHealthCheckRequest struct {
 	XMLName           xml.Name `xml:"CreateHealthCheckRequest"`
+	XMLNS             string   `xml:"xmlns,attr"`
 	CallerReference   string
 	HealthCheckConfig HealthCheckConfig
 }
@@ -55,6 +56,7 @@ type DeleteHealthCheckResponse struct {
 
 func (r53 *Route53) CreateHealthCheck(config HealthCheckConfig, reference string) (string, error) {
 	xmlReq := &CreateHealthCheckRequest{
+		XMLNS:             "https://route53.amazonaws.com/doc/2012-12-12/",
 		CallerReference:   reference,
 		HealthCheckConfig: config,
 	}

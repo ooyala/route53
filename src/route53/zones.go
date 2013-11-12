@@ -19,6 +19,7 @@ type HostedZone struct {
 
 type CreateHostedZoneRequest struct {
 	XMLName         xml.Name `xml:"CreateHostedZoneRequest"`
+	XMLNS           string   `xml:"xmlns,attr"`
 	Name            string
 	CallerReference string
 	Comment         string `xml:"HostedZoneConfig>Comment"`
@@ -54,6 +55,7 @@ type DeleteHostedZoneResponse struct {
 
 func (r53 *Route53) CreateHostedZone(name, reference, comment string) (ChangeInfo, error) {
 	xmlReq := &CreateHostedZoneRequest{
+		XMLNS:           "https://route53.amazonaws.com/doc/2012-12-12/",
 		Name:            name,
 		CallerReference: reference,
 		Comment:         comment,
