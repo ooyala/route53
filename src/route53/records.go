@@ -34,9 +34,9 @@ type RRSet struct {
 	Weight uint8 `xml:",omitempty"`
 
 	// Alias Syntax
-	// HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
-	// DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
-	// EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
+	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
+	DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
+	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
 
 	// Fail Syntax
 	FailOver string `xml:",omitempty"`

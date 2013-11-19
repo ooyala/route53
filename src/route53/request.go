@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type request struct {
@@ -61,11 +62,13 @@ func (r53 *Route53) run(req request, res interface{}) error {
 		}
 
 		if debug {
-			ppBody, _ := xml.MarshalIndent(req.body, " ", "    ")
-			fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", xml.Header+string(ppBody))
+			ppData, _ := xml.MarshalIndent(req.body, " ", "    ")
+			ppBody_s11n := strings.Replace(string(ppData), "<AliasTarget></AliasTarget>", "- <AliasTarget></AliasTarget>", -1)
+			fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", xml.Header + ppBody_s11n)
 		}
 
-		hreq.Body = ioutil.NopCloser(bytes.NewBufferString(xml.Header + string(data)))
+		body_s11n := strings.Replace(string(data), "<AliasTarget></AliasTarget>", "", -1)
+		hreq.Body = ioutil.NopCloser(bytes.NewBufferString(xml.Header + body_s11n))
 	}
 
 	hres, err := http.DefaultClient.Do(hreq)
