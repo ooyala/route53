@@ -2,8 +2,10 @@ package route53
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"github.com/crowdmob/goamz/aws"
+	"time"
 )
 
 var debug bool
@@ -50,4 +52,30 @@ func (r53 *Route53) GetChange(id string) (ChangeInfo, error) {
 	}
 
 	return xmlRes.ChangeInfo, nil
+}
+
+func (r53 *Route53) PollForSync(id string, every, tout time.Duration) (result chan error) {
+	go func() {
+		toutC := time.After(tout)
+		pollC := time.Tick(every)
+		for {
+			select {
+			case <-pollC:
+				change, err := r53.GetChange(id)
+				if err != nil {
+					result <- err
+					return
+				}
+				if change.Status == "INSYNC" {
+					result <- nil
+					return
+				}
+			case <-toutC:
+				result <- errors.New("timed out")
+				return
+			}
+		}
+	}()
+
+	return result
 }
