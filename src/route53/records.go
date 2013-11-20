@@ -102,7 +102,6 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 	for xmlRes.IsTruncated {
 		req.params = &url.Values{
 			"name":       []string{xmlRes.NextRecordName},
-			"identifier": []string{xmlRes.NextRecordIdentifier},
 		}
 
 		if err := r53.run(req, xmlRes); err != nil {
