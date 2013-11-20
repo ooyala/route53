@@ -29,6 +29,7 @@ func New(auth aws.Auth) *Route53 {
 }
 
 type ChangeInfo struct {
+	r53         *Route53 `xml:"-"`
 	Id          string
 	Status      string
 	SubmittedAt string
@@ -54,14 +55,14 @@ func (r53 *Route53) GetChange(id string) (ChangeInfo, error) {
 	return xmlRes.ChangeInfo, nil
 }
 
-func (r53 *Route53) PollForSync(id string, every, tout time.Duration) (result chan error) {
+func (c *ChangeInfo) PollForSync(every, tout time.Duration) (result chan error) {
 	go func() {
 		toutC := time.After(tout)
 		pollC := time.Tick(every)
 		for {
 			select {
 			case <-pollC:
-				change, err := r53.GetChange(id)
+				change, err := c.r53.GetChange(c.Id)
 				if err != nil {
 					result <- err
 					return

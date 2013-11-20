@@ -2,8 +2,8 @@ package route53
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
+	"net/url"
 )
 
 // XML RPC types.
@@ -72,6 +72,7 @@ func (r53 *Route53) CreateHostedZone(name, reference, comment string) (ChangeInf
 	if err := r53.run(req, xmlRes); err != nil {
 		return ChangeInfo{}, err
 	}
+	xmlRes.ChangeInfo.r53 = r53
 
 	return xmlRes.ChangeInfo, nil
 }
@@ -87,7 +88,6 @@ func (r53 *Route53) GetHostedZone(id string) (HostedZone, error) {
 	if err := r53.run(req, xmlRes); err != nil {
 		return HostedZone{}, err
 	}
-
 	xmlRes.HostedZone.r53 = r53
 
 	return xmlRes.HostedZone, nil
@@ -101,21 +101,32 @@ func (r53 *Route53) ListHostedZones() ([]HostedZone, error) {
 
 	xmlRes := &ListHostedZonesResponse{}
 
+	zones := []HostedZone{}
+
 	if err := r53.run(req, xmlRes); err != nil {
 		return []HostedZone{}, err
 	}
-	if xmlRes.IsTruncated {
-		return []HostedZone{}, errors.New("cannot handle truncated responses")
+	zones = append(zones, xmlRes.HostedZones...)
+
+	for xmlRes.IsTruncated {
+		req = &url.Values{
+			"marker": []string{xmlRes.NextMarker},
+		}
+
+		if err := r53.run(req, xmlRes); err != nil {
+			return []HostedZone{}, err
+		}
+		zones = append(zones, xmlRes.HostedZones...)
 	}
 
-	for _, zone := range xmlRes.HostedZones {
+	for _, zone := range zones {
 		zone.r53 = r53
 	}
 
-	return xmlRes.HostedZones, nil
+	return zones, nil
 }
 
-func (r53 *Route53) DeleteHostedZone(id string) error {
+func (r53 *Route53) DeleteHostedZone(id string) (ChangeInfo, error) {
 	req := request{
 		method: "DELETE",
 		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s", id),
@@ -124,8 +135,9 @@ func (r53 *Route53) DeleteHostedZone(id string) error {
 	xmlRes := &DeleteHostedZoneResponse{}
 
 	if err := r53.run(req, xmlRes); err != nil {
-		return err
+		return ChangeInfo{}, err
 	}
+	xmlRes.ChangeInfo.r53 = r53
 
-	return nil
+	return xmlRes.ChangeInfo, nil
 }

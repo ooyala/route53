@@ -2,8 +2,8 @@ package route53
 
 import (
 	"encoding/xml"
-	"errors"
 	"fmt"
+	"net/url"
 )
 
 // XML RPC types.
@@ -79,6 +79,7 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 	if err := r53.run(req, xmlRes); err != nil {
 		return ChangeInfo{}, err
 	}
+	xmlRes.ChangeInfo.r53 = r53
 
 	return xmlRes.ChangeInfo, nil
 }
@@ -91,14 +92,26 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 
 	xmlRes := &ListRRSetResponse{}
 
+	rrsets := []RRSet{}
+
 	if err := r53.run(req, xmlRes); err != nil {
 		return []RRSet{}, err
 	}
-	if xmlRes.IsTruncated {
-		return []RRSet{}, errors.New("cannot handle truncated responses")
+	rrsets = append(rrsets, xmlRes.RRSets...)
+
+	for xmlRes.IsTruncated {
+		req.params = &url.Values{
+			"name":       []string{xmlRes.NextRecordName},
+			"identifier": []string{xmlRes.NextRecordIdentifier},
+		}
+
+		if err := r53.run(req, xmlRes); err != nil {
+			return []RRSet{}, err
+		}
+		rrsets = append(rrsets, xmlRes.RRSets...)
 	}
 
-	return xmlRes.RRSets, nil
+	return rrsets, nil
 }
 
 // Convenience functions on AWS APIs.
