@@ -76,7 +76,7 @@ type RRSetCommand struct {
 	Weight uint8 `long:"weight" description:"record weight [0-255]"`
 
 	// Failover Syntax
-	FailOver string `long:"failover" description:"primary or secondary"`
+	Failover string `long:"failover" description:"primary or secondary"`
 
 	// Latency Syntax
 	Region string `long:"region" description:"ec2 region name"`
@@ -90,7 +90,7 @@ func (r *RRSetCommand) Execute(args []string) error {
 		Values:        r.Values,
 		SetIdentifier: r.SetIdentifier,
 		Weight:        r.Weight,
-		FailOver:      r.FailOver,
+		Failover:      r.Failover,
 		Region:        r.Region,
 	}
 

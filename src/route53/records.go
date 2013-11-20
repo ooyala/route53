@@ -39,7 +39,7 @@ type RRSet struct {
 	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
 
 	// Fail Syntax
-	FailOver string `xml:",omitempty"`
+	Failover string `xml:",omitempty"`
 
 	// Latency Syntax
 	Region string `xml:",omitempty"`
