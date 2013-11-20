@@ -109,7 +109,7 @@ func (r53 *Route53) ListHostedZones() ([]HostedZone, error) {
 	zones = append(zones, xmlRes.HostedZones...)
 
 	for xmlRes.IsTruncated {
-		req = &url.Values{
+		req.params = &url.Values{
 			"marker": []string{xmlRes.NextMarker},
 		}
 
