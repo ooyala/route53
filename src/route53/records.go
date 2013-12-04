@@ -31,7 +31,7 @@ type RRSet struct {
 	SetIdentifier string `xml:",omitempty"`
 
 	// Weight Syntax
-	Weight uint8 `xml:",omitempty"`
+	Weight uint8
 
 	// Alias Syntax
 	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
@@ -101,7 +101,7 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 
 	for xmlRes.IsTruncated {
 		req.params = &url.Values{
-			"name":       []string{xmlRes.NextRecordName},
+			"name": []string{xmlRes.NextRecordName},
 		}
 
 		if err := r53.run(req, xmlRes); err != nil {

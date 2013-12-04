@@ -19,7 +19,8 @@ func DebugOff() {
 }
 
 type Route53 struct {
-	auth aws.Auth
+	auth          aws.Auth
+	IncludeWeight bool
 }
 
 func New(auth aws.Auth) *Route53 {
