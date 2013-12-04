@@ -21,28 +21,33 @@ type RRSetChange struct {
 }
 
 type RRSet struct {
+	// Basic Stuff
 	Name          string
 	Type          string
 	TTL           uint
-	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
-	HealthCheckId string   `xml:",omitempty"`
 
 	// Optional Unique Identifier
 	SetIdentifier string `xml:",omitempty"`
 
+	// Fail Syntax
+	Failover string `xml:",omitempty"`
+
 	// Weight Syntax
 	Weight uint8
+
+	// Latency Syntax
+	Region string `xml:",omitempty"`
+
+	// Non-Alias Syntax
+	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
 
 	// Alias Syntax
 	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
 	DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
 	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
 
-	// Fail Syntax
-	Failover string `xml:",omitempty"`
-
-	// Latency Syntax
-	Region string `xml:",omitempty"`
+	// Health Checks
+	HealthCheckId string   `xml:",omitempty"`
 }
 
 type ChangeRRSetsResponse struct {
