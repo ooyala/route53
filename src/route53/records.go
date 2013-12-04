@@ -24,7 +24,6 @@ type RRSet struct {
 	// Basic Stuff
 	Name          string
 	Type          string
-	TTL           uint
 
 	// Optional Unique Identifier
 	SetIdentifier string `xml:",omitempty"`
@@ -37,6 +36,9 @@ type RRSet struct {
 
 	// Latency Syntax
 	Region string `xml:",omitempty"`
+
+	// TTL for the record
+	TTL           uint
 
 	// Non-Alias Syntax
 	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
