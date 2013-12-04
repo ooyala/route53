@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // XML RPC types.
@@ -22,8 +23,8 @@ type RRSetChange struct {
 
 type RRSet struct {
 	// Basic Stuff
-	Name          string
-	Type          string
+	Name string
+	Type string
 
 	// Optional Unique Identifier
 	SetIdentifier string `xml:",omitempty"`
@@ -38,10 +39,10 @@ type RRSet struct {
 	Region string `xml:",omitempty"`
 
 	// TTL for the record
-	TTL           uint
+	TTL uint
 
 	// Non-Alias Syntax
-	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
+	Values []string `xml:"ResourceRecords>ResourceRecord>Value"`
 
 	// Alias Syntax
 	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
@@ -49,7 +50,7 @@ type RRSet struct {
 	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
 
 	// Health Checks
-	HealthCheckId string   `xml:",omitempty"`
+	HealthCheckId string `xml:",omitempty"`
 }
 
 type ChangeRRSetsResponse struct {
@@ -77,7 +78,7 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 
 	req := request{
 		method: "POST",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneId, "/hostedzone/", "", -1)),
 		body:   xmlReq,
 	}
 
@@ -94,7 +95,7 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneId, "/hostedzone/", "", -1)),
 	}
 
 	xmlRes := &ListRRSetResponse{}

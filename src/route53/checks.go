@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // XML RPC types.
@@ -79,7 +80,7 @@ func (r53 *Route53) CreateHealthCheck(config HealthCheckConfig, reference string
 func (r53 *Route53) GetHealthCheck(id string) (HealthCheck, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/healthcheck/%s", id),
+		path:   fmt.Sprintf("/2012-12-12/healthcheck/%s", strings.Replace(id, "/healthcheck/", "", -1)),
 	}
 
 	xmlRes := &GetHealthCheckResponse{}
@@ -112,7 +113,7 @@ func (r53 *Route53) ListHealthChecks() ([]HealthCheck, error) {
 func (r53 *Route53) DeleteHealthCheck(id string) error {
 	req := request{
 		method: "DELETE",
-		path:   fmt.Sprintf("/2012-12-12/healthcheck/%s", id),
+		path:   fmt.Sprintf("/2012-12-12/healthcheck/%s", strings.Replace(id, "/healthcheck/", "", -1)),
 	}
 
 	xmlRes := &DeleteHealthCheckResponse{}
