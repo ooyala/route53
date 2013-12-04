@@ -57,7 +57,8 @@ func (r53 *Route53) GetChange(id string) (ChangeInfo, error) {
 	return xmlRes.ChangeInfo, nil
 }
 
-func (c *ChangeInfo) PollForSync(every, tout time.Duration) (result chan error) {
+func (c *ChangeInfo) PollForSync(every, tout time.Duration) (chan error) {
+	result := make(chan error)
 	go func() {
 		toutC := time.After(tout)
 		pollC := time.Tick(every)
