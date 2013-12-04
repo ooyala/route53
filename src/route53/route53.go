@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/crowdmob/goamz/aws"
+	"strings"
 	"time"
 )
 
@@ -44,7 +45,7 @@ type GetChangeResponse struct {
 func (r53 *Route53) GetChange(id string) (ChangeInfo, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/change/%s", id),
+		path:   fmt.Sprintf("/2012-12-12/change/%s", strings.Replace(id, "/change/", "", -1)),
 	}
 
 	xmlRes := &GetChangeResponse{}
