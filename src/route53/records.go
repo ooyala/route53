@@ -39,7 +39,7 @@ type RRSet struct {
 	Region string `xml:",omitempty"`
 
 	// TTL for the record
-	TTL uint
+	TTL uint `xml:",omitempty"`
 
 	// Non-Alias Syntax
 	ResourceRecords *ResourceRecords `xml:"ResourceRecords,omitempty"`
