@@ -42,15 +42,27 @@ type RRSet struct {
 	TTL uint
 
 	// Non-Alias Syntax
-	Values []string `xml:"ResourceRecords>ResourceRecord>Value"`
+	ResourceRecords *ResourceRecords `xml:"ResourceRecords,omitempty"`
 
 	// Alias Syntax
-	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
-	DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
-	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
+	AliasTarget *AliasTarget `xml:",omitempty"`
 
 	// Health Checks
 	HealthCheckId string `xml:",omitempty"`
+}
+
+type ResourceRecords struct {
+	ResourceRecord []ResourceRecord `xml:"ResourceRecord"`
+}
+
+type ResourceRecord struct {
+	Value string
+}
+
+type AliasTarget struct {
+	HostedZoneId         string
+	DNSName              string
+	EvaluateTargetHealth bool
 }
 
 type ChangeRRSetsResponse struct {
