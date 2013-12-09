@@ -34,7 +34,7 @@ func (r53 *Route53) updateAuthLoop() {
 			auth, err := aws.GetAuth("", "", "", time.Time{})
 			for ; err != nil; auth, err = aws.GetAuth("", "", "", time.Time{}) {
 				if debug {
-					log.Println("[Route53] Error getting auth (sleeping 5s before retry): %v", err)
+					log.Printf("[Route53] Error getting auth (sleeping 5s before retry): %v", err)
 				}
 				time.Sleep(5 * time.Second)
 			}
@@ -44,7 +44,7 @@ func (r53 *Route53) updateAuthLoop() {
 		} else {
 			// sleep
 			if debug {
-				log.Println("[Route53] auth not expired. sleeping %v until expiry.", diff)
+				log.Printf("[Route53] auth not expired. sleeping %v until expiry.", diff)
 			}
 			time.Sleep(diff)
 		}
