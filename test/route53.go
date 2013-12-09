@@ -184,7 +184,7 @@ func main() {
 		os.Exit(255)
 	}
 
-	r53 = route53.New(auth)
+	r53 = route53.NewWithAuth(auth)
 
 	NewClient().Parse()
 }

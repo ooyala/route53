@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"github.com/crowdmob/goamz/aws"
+	"log"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -21,13 +23,53 @@ func DebugOff() {
 
 type Route53 struct {
 	auth          aws.Auth
+	authLock      sync.RWMutex
 	IncludeWeight bool
 }
 
-func New(auth aws.Auth) *Route53 {
-	return &Route53{
-		auth: auth,
+func (r53 *Route53) updateAuthLoop() {
+	for {
+		if diff := r53.auth.Expiration().Sub(time.Now()); diff <= 0 {
+			// update auth
+			auth, err := aws.GetAuth("", "", "", time.Time{})
+			for ; err != nil; auth, err = aws.GetAuth("", "", "", time.Time{}) {
+				if debug {
+					log.Println("[Route53] Error getting auth (sleeping 5s before retry): %v", err)
+				}
+				time.Sleep(5 * time.Second)
+			}
+			r53.authLock.Lock()
+			r53.auth = auth
+			r53.authLock.Unlock()
+		} else {
+			// sleep
+			time.Sleep(diff)
+			if debug {
+				log.Println("[Route53] auth not expired. sleeping %v until expiry.", diff)
+			}
+		}
 	}
+}
+
+func New() (*Route53, error) {
+	auth, err := aws.GetAuth("", "", "", time.Time{})
+	if err != nil {
+		return nil, err
+	}
+	r53 := &Route53{
+		auth:     auth,
+		authLock: sync.RWMutex{},
+	}
+	go r53.updateAuthLoop()
+	return r53, nil
+}
+
+func NewWithAuth(auth aws.Auth) *Route53 {
+	r53 := &Route53{
+		auth:     auth,
+		authLock: sync.RWMutex{},
+	}
+	return r53
 }
 
 type ChangeInfo struct {

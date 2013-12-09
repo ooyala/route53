@@ -46,7 +46,7 @@ func (r53 *Route53) run(req request, res interface{}) error {
 		ProtoMinor: 1,
 		Header:     http.Header{},
 	}
-	sign(r53.auth, hreq)
+	r53.sign(hreq)
 
 	if debug {
 		fmt.Fprintf(os.Stderr, "-- request\n%+v\n\n", hreq)
