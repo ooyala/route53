@@ -43,10 +43,10 @@ func (r53 *Route53) updateAuthLoop() {
 			r53.authLock.Unlock()
 		} else {
 			// sleep
-			time.Sleep(diff)
 			if debug {
 				log.Println("[Route53] auth not expired. sleeping %v until expiry.", diff)
 			}
+			time.Sleep(diff)
 		}
 	}
 }
