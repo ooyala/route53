@@ -28,6 +28,11 @@ type Route53 struct {
 }
 
 func (r53 *Route53) updateAuthLoop() {
+	if r53.auth.Expiration().IsZero() {
+		// no exp, don't update
+		log.Printf("[Route53] No need to update auth, exiting token update loop.")
+		return
+	}
 	for {
 		if diff := r53.auth.Expiration().Sub(time.Now()); diff <= 0 {
 			// update auth

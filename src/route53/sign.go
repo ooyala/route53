@@ -23,6 +23,8 @@ func (r53 *Route53) sign(hreq *http.Request) {
 
 	hreq.Header.Set("X-Amz-Date", now)
 	hreq.Header.Set("X-Amzn-Authorization", header)
-	hreq.Header.Set("X-Amz-Security-Token", r53.auth.Token())
+	if r53.auth.Token() != "" {
+		hreq.Header.Set("X-Amz-Security-Token", r53.auth.Token())
+	}
 	r53.authLock.RUnlock()
 }
