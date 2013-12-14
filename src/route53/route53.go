@@ -112,7 +112,7 @@ func (c *ChangeInfo) PollForSync(every, tout time.Duration) chan error {
 		for {
 			select {
 			case <-pollC:
-				change, err := c.r53.GetChange(c.Id)
+				change, err := c.r53.GetChange(c.ID)
 				if err != nil {
 					result <- err
 					return
