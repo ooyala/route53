@@ -79,7 +79,7 @@ func NewWithAuth(auth aws.Auth) *Route53 {
 
 type ChangeInfo struct {
 	r53         *Route53 `xml:"-"`
-	Id          string
+	ID          string `xml:"Id"`
 	Status      string
 	SubmittedAt string
 }

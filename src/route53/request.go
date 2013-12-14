@@ -34,7 +34,7 @@ type errorResponse struct {
 	Type      string `xml:"Error>Type"`
 	Code      string `xml:"Error>Code"`
 	Message   string `xml:"Error>Message"`
-	RequestId string
+	RequestID string `xml:"RequestId"`
 }
 
 func (r53 *Route53) run(req request, res interface{}) error {

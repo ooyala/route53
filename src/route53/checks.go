@@ -30,7 +30,7 @@ type CreateHealthCheckResponse struct {
 }
 
 type HealthCheck struct {
-	Id                string
+	ID                string `xml:"Id"`
 	CallerReference   string
 	HealthCheckConfig HealthCheckConfig
 }
@@ -74,7 +74,7 @@ func (r53 *Route53) CreateHealthCheck(config HealthCheckConfig, reference string
 		return "invalid", err
 	}
 
-	return xmlRes.HealthCheck.Id, nil
+	return xmlRes.HealthCheck.ID, nil
 }
 
 func (r53 *Route53) GetHealthCheck(id string) (HealthCheck, error) {

@@ -48,7 +48,7 @@ type RRSet struct {
 	AliasTarget *AliasTarget `xml:",omitempty"`
 
 	// Health Checks
-	HealthCheckId string `xml:",omitempty"`
+	HealthCheckID string `xml:"HealthCheckId,omitempty"`
 }
 
 type ResourceRecords struct {
@@ -60,7 +60,7 @@ type ResourceRecord struct {
 }
 
 type AliasTarget struct {
-	HostedZoneId         string
+	HostedZoneID         string `xml:"HostedZoneId"`
 	DNSName              string
 	EvaluateTargetHealth bool
 }
@@ -81,7 +81,7 @@ type ListRRSetResponse struct {
 
 // Route53 API requests.
 
-func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment string) (ChangeInfo, error) {
+func (r53 *Route53) ChangeRRSet(zoneID string, changes []RRSetChange, comment string) (ChangeInfo, error) {
 	xmlReq := &ChangeRRSetRequest{
 		XMLNS:   "https://route53.amazonaws.com/doc/2012-12-12/",
 		Comment: comment,
@@ -90,7 +90,7 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 
 	req := request{
 		method: "POST",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneId, "/hostedzone/", "", -1)),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneID, "/hostedzone/", "", -1)),
 		body:   xmlReq,
 	}
 
@@ -104,10 +104,10 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 	return xmlRes.ChangeInfo, nil
 }
 
-func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
+func (r53 *Route53) ListRRSets(zoneID string) ([]RRSet, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneId, "/hostedzone/", "", -1)),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneID, "/hostedzone/", "", -1)),
 	}
 
 	xmlRes := &ListRRSetResponse{}
@@ -136,11 +136,11 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 // Convenience functions on AWS APIs.
 
 func (z *HostedZone) ChangeRRSet(changes []RRSetChange, comment string) (ChangeInfo, error) {
-	return z.r53.ChangeRRSet(z.Id, changes, comment)
+	return z.r53.ChangeRRSet(z.ID, changes, comment)
 }
 
 func (z *HostedZone) ListRRSets() ([]RRSet, error) {
-	return z.r53.ListRRSets(z.Id)
+	return z.r53.ListRRSets(z.ID)
 }
 
 func (z *HostedZone) CreateRRSet(rrset RRSet, comment string) (ChangeInfo, error) {

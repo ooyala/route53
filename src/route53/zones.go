@@ -11,7 +11,7 @@ import (
 
 type HostedZone struct {
 	r53                    *Route53 `xml:"-"`
-	Id                     string
+	ID                     string `xml:"Id"`
 	Name                   string
 	CallerReference        string
 	Comment                string `xml:"Config>Comment"`
