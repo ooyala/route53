@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // XML RPC types.
@@ -21,28 +22,47 @@ type RRSetChange struct {
 }
 
 type RRSet struct {
-	Name          string
-	Type          string
-	TTL           uint
-	Values        []string `xml:"ResourceRecords>ResourceRecord>Value"`
-	HealthCheckId string   `xml:",omitempty"`
+	// Basic Stuff
+	Name string
+	Type string
 
 	// Optional Unique Identifier
 	SetIdentifier string `xml:",omitempty"`
 
-	// Weight Syntax
-	Weight uint8 `xml:",omitempty"`
-
-	// Alias Syntax
-	HostedZoneId         string `xml:"AliasTarget>HostedZoneId,omitempty"`
-	DNSName              string `xml:"AliasTarget>DNSName,omitempty"`
-	EvaluateTargetHealth bool   `xml:"AliasTarget>EvaluateTargetHealth,omitempty"`
-
 	// Fail Syntax
 	Failover string `xml:",omitempty"`
 
+	// Weight Syntax
+	Weight uint8
+
 	// Latency Syntax
 	Region string `xml:",omitempty"`
+
+	// TTL for the record
+	TTL uint `xml:",omitempty"`
+
+	// Non-Alias Syntax
+	ResourceRecords *ResourceRecords `xml:"ResourceRecords,omitempty"`
+
+	// Alias Syntax
+	AliasTarget *AliasTarget `xml:",omitempty"`
+
+	// Health Checks
+	HealthCheckID string `xml:"HealthCheckId,omitempty"`
+}
+
+type ResourceRecords struct {
+	ResourceRecord []ResourceRecord `xml:"ResourceRecord"`
+}
+
+type ResourceRecord struct {
+	Value string
+}
+
+type AliasTarget struct {
+	HostedZoneID         string `xml:"HostedZoneId"`
+	DNSName              string
+	EvaluateTargetHealth bool
 }
 
 type ChangeRRSetsResponse struct {
@@ -61,7 +81,7 @@ type ListRRSetResponse struct {
 
 // Route53 API requests.
 
-func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment string) (ChangeInfo, error) {
+func (r53 *Route53) ChangeRRSet(zoneID string, changes []RRSetChange, comment string) (ChangeInfo, error) {
 	xmlReq := &ChangeRRSetRequest{
 		XMLNS:   "https://route53.amazonaws.com/doc/2012-12-12/",
 		Comment: comment,
@@ -70,7 +90,7 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 
 	req := request{
 		method: "POST",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneID, "/hostedzone/", "", -1)),
 		body:   xmlReq,
 	}
 
@@ -84,10 +104,10 @@ func (r53 *Route53) ChangeRRSet(zoneId string, changes []RRSetChange, comment st
 	return xmlRes.ChangeInfo, nil
 }
 
-func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
+func (r53 *Route53) ListRRSets(zoneID string) ([]RRSet, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", zoneId),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s/rrset", strings.Replace(zoneID, "/hostedzone/", "", -1)),
 	}
 
 	xmlRes := &ListRRSetResponse{}
@@ -101,7 +121,7 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 
 	for xmlRes.IsTruncated {
 		req.params = &url.Values{
-			"name":       []string{xmlRes.NextRecordName},
+			"name": []string{xmlRes.NextRecordName},
 		}
 
 		if err := r53.run(req, xmlRes); err != nil {
@@ -116,11 +136,11 @@ func (r53 *Route53) ListRRSets(zoneId string) ([]RRSet, error) {
 // Convenience functions on AWS APIs.
 
 func (z *HostedZone) ChangeRRSet(changes []RRSetChange, comment string) (ChangeInfo, error) {
-	return z.r53.ChangeRRSet(z.Id, changes, comment)
+	return z.r53.ChangeRRSet(z.ID, changes, comment)
 }
 
 func (z *HostedZone) ListRRSets() ([]RRSet, error) {
-	return z.r53.ListRRSets(z.Id)
+	return z.r53.ListRRSets(z.ID)
 }
 
 func (z *HostedZone) CreateRRSet(rrset RRSet, comment string) (ChangeInfo, error) {

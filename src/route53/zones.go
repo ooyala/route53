@@ -4,13 +4,14 @@ import (
 	"encoding/xml"
 	"fmt"
 	"net/url"
+	"strings"
 )
 
 // XML RPC types.
 
 type HostedZone struct {
 	r53                    *Route53 `xml:"-"`
-	Id                     string
+	ID                     string `xml:"Id"`
 	Name                   string
 	CallerReference        string
 	Comment                string `xml:"Config>Comment"`
@@ -80,7 +81,7 @@ func (r53 *Route53) CreateHostedZone(name, reference, comment string) (ChangeInf
 func (r53 *Route53) GetHostedZone(id string) (HostedZone, error) {
 	req := request{
 		method: "GET",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s", id),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s", strings.Replace(id, "/hostedzone/", "", -1)),
 	}
 
 	xmlRes := &GetHostedZoneResponse{}
@@ -129,7 +130,7 @@ func (r53 *Route53) ListHostedZones() ([]HostedZone, error) {
 func (r53 *Route53) DeleteHostedZone(id string) (ChangeInfo, error) {
 	req := request{
 		method: "DELETE",
-		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s", id),
+		path:   fmt.Sprintf("/2012-12-12/hostedzone/%s", strings.Replace(id, "/hostedzone/", "", -1)),
 	}
 
 	xmlRes := &DeleteHostedZoneResponse{}

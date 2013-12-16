@@ -34,7 +34,7 @@ type errorResponse struct {
 	Type      string `xml:"Error>Type"`
 	Code      string `xml:"Error>Code"`
 	Message   string `xml:"Error>Message"`
-	RequestId string
+	RequestID string `xml:"RequestId"`
 }
 
 func (r53 *Route53) run(req request, res interface{}) error {
@@ -46,7 +46,7 @@ func (r53 *Route53) run(req request, res interface{}) error {
 		ProtoMinor: 1,
 		Header:     http.Header{},
 	}
-	sign(r53.auth, hreq)
+	r53.sign(hreq)
 
 	if debug {
 		fmt.Fprintf(os.Stderr, "-- request\n%+v\n\n", hreq)
@@ -64,10 +64,16 @@ func (r53 *Route53) run(req request, res interface{}) error {
 		if debug {
 			ppData, _ := xml.MarshalIndent(req.body, " ", "    ")
 			ppBody_s11n := strings.Replace(string(ppData), "<AliasTarget></AliasTarget>", "- <AliasTarget></AliasTarget>", -1)
+			if !r53.IncludeWeight {
+				ppBody_s11n = strings.Replace(string(ppData), "<Weight>0</Weight>", "- <Weight>0</Weight>", -1)
+			}
 			fmt.Fprintf(os.Stderr, "-- body\n%s\n\n", xml.Header+ppBody_s11n)
 		}
 
 		body_s11n := strings.Replace(string(data), "<AliasTarget></AliasTarget>", "", -1)
+		if !r53.IncludeWeight {
+			body_s11n = strings.Replace(string(data), "<Weight>0</Weight>", "", -1)
+		}
 		hreq.Body = ioutil.NopCloser(bytes.NewBufferString(xml.Header + body_s11n))
 	}
 
