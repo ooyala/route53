@@ -27,6 +27,23 @@ type Route53 struct {
 	IncludeWeight bool
 }
 
+func (r53 *Route53) updateAuth() {
+	r53.authLock.Lock()
+	// update auth
+	auth, err := aws.GetAuth("", "", "", time.Time{})
+	for ; err != nil; auth, err = aws.GetAuth("", "", "", time.Time{}) {
+		if debug {
+			log.Printf("[Route53] Error getting auth (sleeping 5s before retry): %v", err)
+		}
+		time.Sleep(5 * time.Second)
+	}
+	r53.auth = auth
+	if debug {
+		log.Printf("[Route53] auth updated. expires at %v.", auth.Expiration())
+	}
+	r53.authLock.Unlock()
+}
+
 func (r53 *Route53) updateAuthLoop() {
 	if r53.auth.Expiration().IsZero() {
 		// no exp, don't update
@@ -35,17 +52,7 @@ func (r53 *Route53) updateAuthLoop() {
 	}
 	for {
 		if diff := r53.auth.Expiration().Sub(time.Now()); diff <= 0 {
-			// update auth
-			auth, err := aws.GetAuth("", "", "", time.Time{})
-			for ; err != nil; auth, err = aws.GetAuth("", "", "", time.Time{}) {
-				if debug {
-					log.Printf("[Route53] Error getting auth (sleeping 5s before retry): %v", err)
-				}
-				time.Sleep(5 * time.Second)
-			}
-			r53.authLock.Lock()
-			r53.auth = auth
-			r53.authLock.Unlock()
+			r53.updateAuth()
 		} else {
 			// sleep
 			if debug {

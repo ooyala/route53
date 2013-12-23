@@ -38,6 +38,10 @@ type errorResponse struct {
 }
 
 func (r53 *Route53) run(req request, res interface{}) error {
+	return r53.doRun(req, res, 0)
+}
+
+func (r53 *Route53) doRun(req request, res interface{}, try int) error {
 	hreq := &http.Request{
 		Method:     req.method,
 		URL:        req.url(),
@@ -94,7 +98,14 @@ func (r53 *Route53) run(req request, res interface{}) error {
 
 	bodyReadCloser := ioutil.NopCloser(bytes.NewReader(body))
 
-	if hres.StatusCode != 200 {
+	if hres.StatusCode == 403 && try == 0 {
+		if debug {
+			fmt.Fprintln(os.Stderr, "-- forbidden. updating auth and retrying")
+		}
+		// if 403 it probably means our auth is outdated. Lets update it and retry. (only retry once)
+		r53.updateAuth() // this causes all other requests to wait because of the authLock. no big deal though.
+		r53.doRun(req, res, try+1)
+	} else if hres.StatusCode != 200 {
 		eres := errorResponse{}
 
 		err := xml.NewDecoder(bodyReadCloser).Decode(&eres)
